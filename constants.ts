@@ -6,8 +6,9 @@ export const HTTP_STATUS_CODES = {
   NOT_ACCEPTABLE: 406,
   TOO_MANY_REQUESTS: 429,
   INTERNAL_SERVER_ERROR: 500,
+  REQUEST_ENTITY_TOO_LARGE: 413,
 } as const;
 
 export const WHITELIST = ["swear"];
 export const PROFANITY_THRESHOLD = 0.86;
-export const RATE_LIMIT = 10;
+export const RATE_LIMIT = 30;

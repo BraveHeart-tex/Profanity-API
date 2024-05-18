@@ -10,16 +10,8 @@ import {
   WHITELIST,
 } from "./constants";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { Redis } from "@upstash/redis";
+import { Redis } from "@upstash/redis/cloudflare";
 import { Ratelimit } from "@upstash/ratelimit";
-
-const redis = Redis.fromEnv();
-
-const rateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(RATE_LIMIT, "1 m"),
-  prefix: "@upstash/ratelimit",
-});
 
 const semanticSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 25,
@@ -32,6 +24,8 @@ const app = new Hono();
 type Environment = {
   VECTOR_URL: string;
   VECTOR_TOKEN: string;
+  UPSTASH_REDIS_REST_URL: string;
+  UPSTASH_REDIS_REST_TOKEN: string;
 };
 
 app.use(cors());
@@ -45,6 +39,23 @@ app.post("/", async (c) => {
   }
 
   try {
+    const {
+      VECTOR_TOKEN,
+      VECTOR_URL,
+      UPSTASH_REDIS_REST_TOKEN,
+      UPSTASH_REDIS_REST_URL,
+    } = env<Environment>(c);
+
+    const redis = Redis.fromEnv({
+      UPSTASH_REDIS_REST_TOKEN,
+      UPSTASH_REDIS_REST_URL,
+    });
+
+    const rateLimit = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(RATE_LIMIT, "1 m"),
+      prefix: "@upstash/ratelimit",
+    });
     const ipAddress = c.req.raw.headers.get("CF-Connecting-IP");
 
     const { success } = await rateLimit.limit(ipAddress!);
@@ -56,13 +67,12 @@ app.post("/", async (c) => {
       );
     }
 
-    const { VECTOR_TOKEN, VECTOR_URL } = env<Environment>(c);
-
     const index = new Index({
       url: VECTOR_URL,
       token: VECTOR_TOKEN,
       cache: false,
     });
+
     const body = await c.req.json();
 
     let { message } = body as { message: string };
@@ -79,7 +89,7 @@ app.post("/", async (c) => {
         {
           error: `Message cannot exceed ${MESSAGE_CHARACTER_LIMIT} characters`,
         },
-        413
+        HTTP_STATUS_CODES.REQUEST_ENTITY_TOO_LARGE
       );
     }
 
