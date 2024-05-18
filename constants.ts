@@ -10,3 +10,4 @@ export const HTTP_STATUS_CODES = {
 
 export const WHITELIST = ["swear"];
 export const PROFANITY_THRESHOLD = 0.86;
+export const RATE_LIMIT = 10;

@@ -6,9 +6,20 @@ import {
   HTTP_STATUS_CODES,
   MESSAGE_CHARACTER_LIMIT,
   PROFANITY_THRESHOLD,
+  RATE_LIMIT,
   WHITELIST,
 } from "./constants";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { Redis } from "@upstash/redis";
+import { Ratelimit } from "@upstash/ratelimit";
+
+const redis = Redis.fromEnv();
+
+const rateLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(RATE_LIMIT, "1 m"),
+  prefix: "@upstash/ratelimit",
+});
 
 const semanticSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 25,
@@ -34,6 +45,17 @@ app.post("/", async (c) => {
   }
 
   try {
+    const ipAddress = c.req.raw.headers.get("CF-Connecting-IP");
+
+    const { success } = await rateLimit.limit(ipAddress!);
+
+    if (!success) {
+      return c.json(
+        { error: "Rate limit exceeded" },
+        HTTP_STATUS_CODES.TOO_MANY_REQUESTS
+      );
+    }
+
     const { VECTOR_TOKEN, VECTOR_URL } = env<Environment>(c);
 
     const index = new Index({
