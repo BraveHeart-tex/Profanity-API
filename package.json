@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "deploy": "wrangler deploy --minify index.ts"
   },
   "keywords": [],
   "author": "",
@@ -12,7 +12,8 @@
   "dependencies": {
     "@upstash/vector": "^1.1.1",
     "csv-parser": "^3.0.0",
-    "hono": "^4.3.7"
+    "hono": "^4.3.7",
+    "langchain": "^0.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
