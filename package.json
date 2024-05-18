@@ -1,0 +1,21 @@
+{
+  "name": "profanity-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@upstash/vector": "^1.1.1",
+    "csv-parser": "^3.0.0",
+    "hono": "^4.3.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "tsx": "^4.10.5"
+  }
+}
